@@ -19,11 +19,10 @@ export class AwsS3CreatorStack extends cdk.Stack {
     super(scope, id, props);
 
     const removalPolicy = props.deployEnvironment === 'production' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
-    const bucketName = `${props.resourcePrefix}-${props.s3BucketName}`;
 
     // define a bucket for storing server access logs
-    const logBucket = new s3.Bucket(this, `${bucketName}-logs`, {
-      bucketName: `${bucketName}-logs`,
+    const logBucket = new s3.Bucket(this, `${props.resourcePrefix}-s3-bucket-logs`, {
+      bucketName: `${props.resourcePrefix}-${props.deployRegion}-s3-bucket-logs`,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       publicReadAccess: false,
@@ -32,25 +31,28 @@ export class AwsS3CreatorStack extends cdk.Stack {
       enforceSSL: true,  // Ensure all requests to the S3 bucket use SSL
     });
 
-    // define an S3 bucket
-    const s3Bucket = new s3.Bucket(this, bucketName, {
-      bucketName: bucketName,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      publicReadAccess: false,
-      removalPolicy: removalPolicy,
-      autoDeleteObjects: removalPolicy === cdk.RemovalPolicy.DESTROY,
-      accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
-      versioned: true, // Enable versioning
-      serverAccessLogsBucket: logBucket,
-      enforceSSL: true,  // Ensure all requests to the S3 bucket use SSL
-    });
+    for (const s3BucketName of props.s3BucketNames) {
+      // define an S3 bucket
+      const s3Bucket = new s3.Bucket(this, `${props.resourcePrefix}-${s3BucketName}`, {
+        bucketName: `${props.resourcePrefix}-${props.deployRegion}-${s3BucketName}`,
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        publicReadAccess: false,
+        removalPolicy: removalPolicy,
+        autoDeleteObjects: removalPolicy === cdk.RemovalPolicy.DESTROY,
+        accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
+        versioned: true, // Enable versioning
+        serverAccessLogsBucket: logBucket,
+        enforceSSL: true,  // Ensure all requests to the S3 bucket use SSL
+        serverAccessLogsPrefix: `${props.resourcePrefix}-${props.deployRegion}-${s3BucketName}-logs/`
+      });
 
-    // export s3Bucket name
-    new cdk.CfnOutput(this, `${props.appName}-${props.deployEnvironment}-s3BucketName`, {
-      value: s3Bucket.bucketName,
-      exportName: `${props.appName}-${props.deployEnvironment}-s3BucketName`,
-      description: 'The name of the S3 bucket.',
-    });
+      // export s3Bucket name
+      new cdk.CfnOutput(this, `${props.resourcePrefix}-${s3BucketName}-Export`, {
+        value: s3Bucket.bucketName,
+        exportName: `${props.resourcePrefix}-${props.deployRegion}-${s3BucketName}-Export`,
+        description: 'The name of the S3 bucket.',
+      });
+    }
   }
 }

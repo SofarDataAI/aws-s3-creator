@@ -1,6 +1,6 @@
 {
   "name": "aws-s3-creator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "bin": {
     "aws-s3-creator": "bin/aws-s3-creator.js"
   },

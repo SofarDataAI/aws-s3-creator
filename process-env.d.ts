@@ -14,6 +14,6 @@ declare module NodeJS {
          */
         OWNER: string;
 
-        S3_BUCKET_NAME: string;
+        S3_BUCKET_NAMES: string;
     }
 }
