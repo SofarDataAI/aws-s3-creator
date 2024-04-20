@@ -21,6 +21,17 @@ export class AwsS3CreatorStack extends cdk.Stack {
     const removalPolicy = props.deployEnvironment === 'production' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
     const bucketName = `${props.resourcePrefix}-${props.s3BucketName}`;
 
+    // define a bucket for storing server access logs
+    const logBucket = new s3.Bucket(this, `${bucketName}-logs`, {
+      bucketName: `${bucketName}-logs`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      publicReadAccess: false,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      versioned: false,
+      enforceSSL: true,  // Ensure all requests to the S3 bucket use SSL
+    });
+
     // define an S3 bucket
     const s3Bucket = new s3.Bucket(this, bucketName, {
       bucketName: bucketName,
@@ -31,6 +42,8 @@ export class AwsS3CreatorStack extends cdk.Stack {
       autoDeleteObjects: removalPolicy === cdk.RemovalPolicy.DESTROY,
       accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
       versioned: true, // Enable versioning
+      serverAccessLogsBucket: logBucket,
+      enforceSSL: true,  // Ensure all requests to the S3 bucket use SSL
     });
 
     // export s3Bucket name
