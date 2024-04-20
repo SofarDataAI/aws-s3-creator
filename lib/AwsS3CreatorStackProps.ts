@@ -18,7 +18,7 @@ export interface AwsS3CreatorStackProps extends StackProps {
      */
     readonly appName: string;
     /**
-     * The name of the S3 bucket to create.
+     * The name of the S3 buckets to create.
      */
-    readonly s3BucketName: string;
+    readonly s3BucketNames: string[];
 }
