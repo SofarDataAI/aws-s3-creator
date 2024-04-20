@@ -3,7 +3,18 @@ import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { AwsS3CreatorStackProps } from './AwsS3CreatorStackProps';
 
+/**
+ * Represents a CloudFormation stack that creates an S3 bucket with specific properties based on the deployment environment.
+ * This stack is tailored for managing S3 buckets with features like encryption, versioning, and access controls.
+ */
 export class AwsS3CreatorStack extends cdk.Stack {
+  /**
+   * Constructs a new instance of the AwsS3CreatorStack.
+   *
+   * @param scope The parent construct.
+   * @param id An identifier for the stack.
+   * @param props Configuration properties for the stack, including resource prefixes, bucket names, and deployment environment.
+   */
   constructor(scope: Construct, id: string, props: AwsS3CreatorStackProps) {
     super(scope, id, props);
 
