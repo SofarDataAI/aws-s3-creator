@@ -15,7 +15,7 @@ const app = new cdk.App();
 const appAspects = Aspects.of(app);
 
 // check environment variables
-checkEnvVariables('APP_NAME', 'OWNER', 'CDK_DEPLOY_REGION', 'ENVIRONMENT', 'S3_BUCKET_NAME');
+checkEnvVariables('APP_NAME', 'OWNER', 'CDK_DEPLOY_REGION', 'ENVIRONMENT', 'S3_BUCKET_NAMES');
 
 const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env;
 
@@ -25,7 +25,7 @@ const deployEnvironment = process.env.ENVIRONMENT!;
 
 const appName = process.env.APP_NAME!;
 const owner = process.env.OWNER!;
-const s3BucketName = process.env.S3_BUCKET_NAME!;
+const s3BucketNames = process.env.S3_BUCKET_NAMES!.split(',');
 
 // apply tags to all resources
 appAspects.add(new ApplyTags({
@@ -46,7 +46,7 @@ const stackProps: AwsS3CreatorStackProps = {
   deployRegion: cdkRegion,
   deployEnvironment,
   appName,
-  s3BucketName,
+  s3BucketNames,
 };
 new AwsS3CreatorStack(app, `AwsS3CreatorStack`, {
   ...stackProps,
