@@ -1,21 +1,55 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
+
 import * as cdk from 'aws-cdk-lib';
+import * as dotenv from 'dotenv';
+import { Aspects } from 'aws-cdk-lib';
+import { ApplyTags } from '../utils/apply-tag';
+import { AwsSolutionsChecks } from 'cdk-nag';
+import { checkEnvVariables } from '../utils/check-environment-variable';
 import { AwsS3CreatorStack } from '../lib/aws-s3-creator-stack';
+import { AwsS3CreatorStackProps } from '../lib/AwsS3CreatorStackProps';
 
+dotenv.config(); // Load environment variables from .env file
 const app = new cdk.App();
-new AwsS3CreatorStack(app, 'AwsS3CreatorStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+const appAspects = Aspects.of(app);
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+// check environment variables
+checkEnvVariables('APP_NAME', 'OWNER', 'CDK_DEPLOY_REGION', 'ENVIRONMENT');
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env;
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const cdkRegion = process.env.CDK_DEPLOY_REGION!;
+const deployEnvironment = process.env.ENVIRONMENT!;
+
+
+const appName = process.env.APP_NAME!;
+const owner = process.env.OWNER!;
+
+// apply tags to all resources
+appAspects.add(new ApplyTags({
+  environment: deployEnvironment as 'development' | 'staging' | 'production' | 'demonstration',
+  project: appName,
+  owner: owner,
+}));
+
+// security check
+appAspects.add(new AwsSolutionsChecks());
+
+const stackProps: AwsS3CreatorStackProps = {
+  resourcePrefix: `${appName}-${deployEnvironment}`,
+  env: {
+    region: cdkRegion,
+    account,
+  },
+  deployRegion: cdkRegion,
+  deployEnvironment,
+  appName,
+};
+new AwsS3CreatorStack(app, `AwsS3CreatorStack`, {
+  ...stackProps,
+  stackName: `${appName}-${deployEnvironment}-${cdkRegion}-AwsS3CreatorStack`,
+  description: `AwsS3CreatorStack for ${appName} in ${cdkRegion} ${deployEnvironment}.`,
 });
+
+app.synth();
