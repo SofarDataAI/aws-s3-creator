@@ -13,5 +13,7 @@ declare module NodeJS {
          * The owner of the application.
          */
         OWNER: string;
+
+        S3_BUCKET_NAME: string;
     }
 }
